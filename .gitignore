@@ -1,0 +1,9 @@
+data/
+outputs/models/
+*.zip
+*.pth
+*.pt
+__pycache__/
+.ipynb_checkpoints/
+.env
+kaggle.json
