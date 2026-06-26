@@ -4,7 +4,7 @@ from pathlib import Path
 from PIL import Image
 import sys, os
 
-from config import *
+from src.config import *
 from torchvision.transforms import transforms, v2
 
 

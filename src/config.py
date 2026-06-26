@@ -26,3 +26,19 @@ RANDOM_SEED = 42
 # Modelo / entrenamiento
 MODEL_NAME = "custom_cnn"
 DEVICE = "cuda"
+
+
+################################################################################
+## Hyperparameter Tuning: Version Base
+################################################################################
+
+config = {
+    "lr": 0.003,
+    "beta1": 0.9,
+    "beta2": 0.9,
+    "weight_decay": 0,
+    "batch_size": 50,
+    "dataloader_worker_count": 10,
+    "dataloader_prefetch_factor": 5000,
+    "trial_name": "1a",
+}

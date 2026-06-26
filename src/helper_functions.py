@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
-from dataset import DatasetWrapper_Train
+from src.dataset import DatasetWrapper_Train
 
 import torch
 import torch.nn as nn
@@ -121,6 +121,81 @@ def plot_label_balance(labels):
     print("No-cancer count: ", count_no_cancer)
     print("Cancer count: ", count_cancer)
 
+
+################################################################################
+## Preview what the untransformed images look like
+################################################################################
+def preview_images(dataset,n_row=5,n_col=10,border_width=3):
+
+    colors_set = ["#249A41", "#E92E18"]
+
+    ## Create the figure
+    fig, ax = plt.subplots(n_row, n_col, figsize=(n_col*1.3, n_row*1.3), facecolor="#EFEFEF")
+    fig.suptitle("UNTRANSFORMED Image Preview\n(Green=No-Cancer, Red=Cancer)")
+
+
+    for i in range(n_row):
+        for j in range(n_col): 
+            idx = n_col * i + j
+            image, label = dataset.get_untransformed(idx)
+            
+            ## Show the image
+            ax[i, j].imshow(image)
+            
+            ## Configure the shown image
+            ax[i, j].spines[:].set_color(colors_set[label])  # SpinesProxy broadcasts the method call to all spines
+            ax[i, j].spines[:].set_linewidth(border_width)   # SpinesProxy broadcasts the method call to all spines
+            ax[i, j].set_xticklabels([])
+            ax[i, j].set_xticks([])
+            ax[i, j].set_yticklabels([])
+            ax[i, j].set_yticks([])
+            
+            ## Add a rectangle patch
+            left, bottom, width, height = (32, 32, 32, 32)
+            rectangle = plt.Rectangle((left, bottom), width, height, 
+                                    facecolor="yellow", alpha=0.2)
+            ax[i, j].add_patch(rectangle)
+
+    ## Matplotlib show
+    plt.show(block=True)
+
+
+
+################################################################################
+## Preview what the transformed images look like
+################################################################################
+def preview_transformed_images(dataset,n_row=5,n_col=10,border_width=3):
+    colors_set = ["#249A41", "#E92E18"]
+
+    ## Create the figure
+    fig, ax = plt.subplots(n_row, n_col, figsize=(n_col*1.3, n_row*1.3), facecolor="#EFEFEF")
+    fig.suptitle("TRANSFORMED Image Preview\n(Green=No-Cancer, Red=Cancer)")
+
+
+    for i in range(n_row):
+        for j in range(n_col): 
+            image, label = next(dataset)  # Fetch the next image
+            image = np.transpose(image, [1, 2, 0])      # PyTorch Tensor is in a different ordering, thus need to transpose
+            
+            ## Show the image
+            ax[i, j].imshow(image)
+            
+            ## Configure the shown image
+            ax[i, j].spines[:].set_color(colors_set[label])  # SpinesProxy broadcasts the method call to all spines
+            ax[i, j].spines[:].set_linewidth(border_width)   # SpinesProxy broadcasts the method call to all spines
+            ax[i, j].set_xticklabels([])
+            ax[i, j].set_xticks([])
+            ax[i, j].set_yticklabels([])
+            ax[i, j].set_yticks([])
+            
+            ## Add a rectangle patch
+            left, bottom, width, height = (7, 7, 32, 32)
+            rectangle = plt.Rectangle((left, bottom), width, height, 
+                                    facecolor="yellow", alpha=0.2)
+            ax[i, j].add_patch(rectangle)
+
+    ## Matplotlib show
+    plt.show(block=True)
 
 
 if  __name__ == "__main__":
