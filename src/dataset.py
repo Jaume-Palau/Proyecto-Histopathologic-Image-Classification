@@ -8,10 +8,6 @@ from config import *
 from torchvision.transforms import transforms, v2
 
 
-################################################################################
-## Wrap the TRAIN dataset with PyTorch utility wrapper
-################################################################################
-
 class DatasetWrapper_Train(torch.utils.data.Dataset):
     # TODO: Redo the function so that data can be downloaded without being on Kaggle
     
@@ -136,12 +132,59 @@ class DatasetWrapper_Test(torch.utils.data.Dataset):
         return (file_id, image)
 
 
+################################################################################
+## Train Test Split
+################################################################################
+
+def train_test_split(dataset_to_split:torch.utils.data.Dataset, 
+                     train_proportion:float=0.8, 
+                     random_seed:int=RANDOM_SEED, 
+                     subset_size:int=None):
+    """Split a dataset to train and validation sets.
+    
+    Args: 
+        dataset_to_split (torch.utils.data.Dataset): The dataset to be split.
+        train_proportion (float): Proportion of training set, default=0.8.
+        random_seed (int): Seed for random generator for reproducibility.
+        subset_size (int): If set, the dataset to be split will be truncated to this size.
+    
+    Returns: 
+        (train_set, test_set)
+    """
+    assert ((train_proportion>0) & (train_proportion<1)), f"Train proportion has to be (0, 1), got {train_proportion}."
+    
+    if subset_size != None:
+        dataset_to_split = torch.utils.data.Subset(dataset_to_split, range(subset_size))
+    
+    generator1 = torch.Generator().manual_seed(1234)  # To allow reproducibility
+
+    # Split to train/test subsets (including labels)
+    train_set, test_set = torch.utils.data.random_split(
+        dataset_to_split, 
+        [train_proportion, 1-train_proportion], 
+        generator=generator1
+    )
+    
+    return (train_set, test_set)
+
+
 
 if __name__ == "__main__":
-## Gather and transform the image
+    ## Gather and transform the image
     train_dataset = DatasetWrapper_Train()
     print(f"training_data_tensor size: {sys.getsizeof(train_dataset)} bytes")
 
 
     test_dataset = DatasetWrapper_Test()
     print(f"testing_data_tensor size: {sys.getsizeof(test_dataset)} bytes")
+
+    ## IGNORE - sanity check
+    training_set, testing_set = train_test_split(train_dataset)
+
+    print(f"The training set has {len(training_set)} entries.")
+    print(f"The testing set has {len(testing_set)} entries.")
+    print()
+
+    for i, (image, label) in enumerate(training_set): 
+        if i > 10: break  # Checking the first few entries
+        print(f"Image: {i} | On: {image.device} | Shape: {image.shape} | Label: {label}")

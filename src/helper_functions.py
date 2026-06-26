@@ -1,5 +1,7 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from pathlib import Path
+from dataset import DatasetWrapper_Train
 
 import torch
 import torch.nn as nn
@@ -80,6 +82,44 @@ def calc_dim(height:int, width:int, conv_layer:torch.nn):
     output_width = int( (width + 2*padding_w - dilation_w*(kernel_w-1) - 1)/stride_w +1 )
     
     return (output_height, output_width)
+
+
+################################################################################
+## Analyze the balance of labels
+################################################################################
+
+def plot_label_balance(labels):
+    
+    ## Get an instance of the dataloader
+    training_set = DatasetWrapper_Train()
+
+    ## Count the number of cancer / no-cancer labels
+    count_no_cancer = np.count_nonzero(np.equal(training_set.labels, 0))
+    count_cancer = np.count_nonzero(np.equal(training_set.labels, 1))
+
+
+    ## Plot bar chart of cancer vs no cancer 
+    fig, ax = plt.subplots(figsize=(3, 5))
+    barchart = ax.bar(
+        ["no_cancer", "cancer"], [count_no_cancer, count_cancer], 
+        color=["#249A41", "#E92E18"],
+        width=0.3,
+        align="center",
+    )
+    ax.bar_label(barchart, labels=[count_no_cancer, count_cancer], padding=1)
+    ax.set_title("Training Set Label Counts")
+    ax.text(
+        0.3, 122000, f"no_cancer:cancer = {round(count_no_cancer/count_cancer, 3)}", 
+        ha="left", va="center",
+        wrap=True,
+        bbox=dict(facecolor="#EFEFEF", 
+                alpha=0.3)
+    )
+    fig.show()
+
+    ## Check
+    print("No-cancer count: ", count_no_cancer)
+    print("Cancer count: ", count_cancer)
 
 
 
