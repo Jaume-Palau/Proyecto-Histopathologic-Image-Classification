@@ -16,3 +16,4 @@ ipykernel
 wandb
 kaggle
 scikit-learn
+opencv-python
