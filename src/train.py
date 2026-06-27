@@ -2,6 +2,8 @@
 import os, pickle,time, torch
 import numpy as np
 
+from sklearn.metrics import roc_auc_score
+import wandb
 from config import *
 from pathlib import Path
 from tqdm.autonotebook import tqdm
@@ -14,7 +16,7 @@ from model import CustomCNN
 ## Train the model
 ################################################################################
 
-def train_the_model(config:dict, n_epochs:int=1, verbose:bool=False, progress_print:bool=False):
+def train_the_model(config:dict, n_epochs:int=1, verbose:bool=False, progress_print:bool=False,use_sweeps=False):
     """Training loop that connects everything! See comments for details.
 
     Args: 
@@ -125,10 +127,15 @@ def train_the_model(config:dict, n_epochs:int=1, verbose:bool=False, progress_pr
         total_training_loop_time = time.time() - total_training_loop_start  # Timer
         print(f"Timer - ENTIRE TRAINING PORTION : {total_training_loop_time}")
 
+        all_val_labels = []
+        all_val_probs = []
+
         ## Validation Loop
+        model.eval()
         print("Validation loop")
         total_validation_loop_start = time.time()  # Timer
         for batch_idx in tqdm(range(validation_batches_per_epoch), desc="VALIDATION PORTION"): 
+
             if verbose: start_time = time.time()  # Timer
             if batch_idx == 0:  # Magic of Dataloader
                 data_loader_iter = iter(validation_dataloader)
@@ -141,6 +148,7 @@ def train_the_model(config:dict, n_epochs:int=1, verbose:bool=False, progress_pr
                 start_time = time.time()
                 images = images.to(device)
                 labels = labels.to(device)
+
                 if verbose: print(f"Timer - Move to {device} : {time.time() - start_time}")
                 #print(f"Images Device: {images.device}, Labels Device: {labels.device}")  # Debug use
                 ## Model inference
@@ -148,6 +156,13 @@ def train_the_model(config:dict, n_epochs:int=1, verbose:bool=False, progress_pr
                 outputs = model(images)
                 max_value, max_idx = torch.max(outputs, dim=1)
                 prediction = max_idx
+
+                probs = torch.exp(outputs)
+                probs = probs[:,1]
+                all_val_labels.append(labels.detach().cpu())
+                all_val_probs.append(probs.detach().cpu())
+
+
                 if verbose: print(f"Timer - Model inference : {time.time() - start_time}")  # Timer
             ## Calculate metrics
             loss = loss_function(outputs, labels)
@@ -163,9 +178,14 @@ def train_the_model(config:dict, n_epochs:int=1, verbose:bool=False, progress_pr
         total_validation_loop_time = time.time() - total_validation_loop_start
         print(f"Timer - ENTIRE VALIDATION PORTION : {total_validation_loop_time}")
 
+        y_true = torch.cat(all_val_labels).numpy()
+        y_probs = torch.cat(all_val_probs).numpy()
+
+        val_auc_roc = roc_auc_score(y_true,y_probs)
         
          ## Collect all the items into dictionary to return
         output = {
+            "AUC-ROC" : val_auc_roc,
             "Training Loss": track_training_loss, 
             "Training TP": track_training_TP_count, 
             "Training FP": track_training_FP_count, 
@@ -178,7 +198,14 @@ def train_the_model(config:dict, n_epochs:int=1, verbose:bool=False, progress_pr
             "Validation FN": track_validation_FN_count,
             #"loss": 1, # Dummy loss
         }
-        
+
+        if use_sweeps:
+            wandb.log({
+            "AUC-ROC" : val_auc_roc,
+
+            })
+
+
         ########## CHECKPOINT PORTION ##########
         ## Create checkpoint data to be serialized
         checkpoint_data = {
@@ -210,3 +237,5 @@ def train_the_model(config:dict, n_epochs:int=1, verbose:bool=False, progress_pr
         
         
     return output
+
+

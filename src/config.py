@@ -44,3 +44,52 @@ config = {
     "dataloader_prefetch_factor": 5000,
     "trial_name": "1a",
 }
+
+sweep_config = {
+    "method": "bayes",
+
+    "metric": {
+        "name": "val_auc_roc",
+        "goal": "maximize"
+    },
+
+    "parameters": {
+        "lr": {
+            "distribution": "log_uniform_values",
+            "min": 1e-5,
+            "max": 5e-3
+        },
+
+        "beta1": {
+            "distribution": "uniform",
+            "min": 0.85,
+            "max": 0.95
+        },
+
+        "beta2": {
+            "distribution": "uniform",
+            "min": 0.90,
+            "max": 0.999
+        },
+
+        "weight_decay": {
+            "values": [0, 1e-6, 1e-5, 1e-4, 1e-3]
+        },
+
+        "batch_size": {
+            "values": [32, 50, 64, 96, 128]
+        },
+
+        "dataloader_worker_count": {
+            "value": 10
+        },
+
+        "dataloader_prefetch_factor": {
+            "value": 2
+        },
+
+        "epochs": {
+            "value": 3
+        }
+    }
+}
