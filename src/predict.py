@@ -1,0 +1,87 @@
+from itertools import chain
+
+import numpy as np
+import pandas as pd
+import torch
+import tqdm
+
+from dataset import DatasetWrapper_Test
+from model import CustomCNN
+from src.config import *
+
+def load_trained_model(checkpoint_path,device):
+    ## Load the model state from output file
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    loaded_checkpoint = torch.load(
+        checkpoint_path,  
+    map_location=torch.device(device)
+    )
+    ## Create model and load the model state
+    cnn_model = CustomCNN()
+    cnn_model.load_state_dict(loaded_checkpoint["model_state_dict"])
+    cnn_model.to(device)
+    cnn_model.eval()
+
+    return cnn_model
+
+
+def predict_test_set(cnn_model):
+
+    cnn_model.eval()
+
+    ## Inference with model 1a and save results
+    test_dataloader = torch.utils.data.DataLoader(  # Create a dataloader to make things easier
+        dataset = DatasetWrapper_Test(),  # The competition test dataset
+        batch_size = BATCH_SIZE, 
+        shuffle = False, 
+        num_workers = 10, 
+        prefetch_factor = 5000,
+        drop_last = False,
+    )
+
+    file_id_holder = []  # Test set is small enough thus holding output in memory
+    results_holder = np.zeros(shape=(len(test_dataloader), BATCH_SIZE) )   # Test set is small enough thus holding output in memory
+    for idx in tqdm(range( len(test_dataloader) ), desc="Inferencing test set"):
+        with torch.no_grad():  # No gradient mode
+            
+            if idx == 0:  # Create an dataloader iterator
+                dataloader_iter = iter(test_dataloader)
+                
+            file_ids, images = next(dataloader_iter)  # Load the next iterator output
+            assert len(file_ids) == len(images), "File IDs and images don't have the same number of records."
+            images = images.to(DEVICE)  # Transfer to GPU for faster inferencing
+            
+            ## Model inference
+            output = cnn_model(images)
+            max_value, max_idx = torch.max(output, dim=1)
+            predictions = max_idx
+            
+            ## Append results to holder
+            predictions = predictions.cpu().numpy()  # Need to copy to CPU first
+            if len(predictions) != BATCH_SIZE:  # The last batch typically is not a full-sized batch
+                predictions = np.pad(predictions, (0, BATCH_SIZE - len(predictions)), "constant", constant_values=(0))
+            results_holder[idx, :] = predictions
+            file_id_holder.append(file_ids)
+
+    ## Reshape the 2D array to an 1D array
+    file_id_holder_new = list(chain(*file_id_holder))  # Convert list of lists into just list
+    results_holder_new = results_holder.reshape((-1))[:len(file_id_holder_new)].astype(int)  # Remove the extra padded elements
+
+    return file_id_holder_new, results_holder_new
+
+
+def create_submisssion(file_id_holder_new,results_holder_new,output_path=SUBMISSIONS_DIR):
+    ## Save the data in CSV for submission
+    df = pd.DataFrame(
+        {"id":file_id_holder_new, 
+        "label":results_holder_new},
+        )
+    df.to_csv(str(output_path/"submission.csv"), index=False)
+
+
+
+
+
+
+
+

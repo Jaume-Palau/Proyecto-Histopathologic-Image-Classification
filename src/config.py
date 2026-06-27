@@ -8,6 +8,8 @@ DATA_DIR = ROOT_DIR / "data"
 RAW_DIR = DATA_DIR / "raw" / "histopathologic-cancer-detection"
 PROCESSED_DIR = DATA_DIR / "processed"
 OUTPUTS_DIR = ROOT_DIR / "outputs"
+CHECKPOINTS = OUTPUTS_DIR / "checkpoints"
+SUBMISSIONS_DIR = OUTPUTS_DIR / "submissions"
 
 # Datos del concurso
 TRAIN_DIR = RAW_DIR / "train"
