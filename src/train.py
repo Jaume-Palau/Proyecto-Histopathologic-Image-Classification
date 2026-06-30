@@ -202,7 +202,8 @@ def train_the_model(config:dict, n_epochs:int, verbose:bool=False, progress_prin
         if use_sweeps:
             wandb.log({
             "AUC-ROC" : val_auc_roc,
-
+            "Training Loss": track_training_loss, 
+            "Validation Loss": track_validation_loss,
             })
 
 
