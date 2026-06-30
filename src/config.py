@@ -42,18 +42,22 @@ config = {
     "batch_size": 50,
     "dataloader_worker_count": 10,
     "dataloader_prefetch_factor": 5000,
-    "trial_name": "1a",
+    "name": "1a",
 }
 
 sweep_config = {
     "method": "bayes",
 
     "metric": {
-        "name": "val_auc_roc",
+        "name": "AUC-ROC",
         "goal": "maximize"
     },
 
     "parameters": {
+        "name" : {
+            "value" : "prueba"
+        },
+
         "lr": {
             "distribution": "log_uniform_values",
             "min": 1e-5,

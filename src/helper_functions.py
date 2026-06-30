@@ -34,7 +34,7 @@ def plot_results(config, training_loss, validation_loss, filename_path):
     ax.scatter(x=range(len(validation_loss)), 
                y=validation_loss)
 
-    ax.set_title(f"Training/Validation Loss of Trial: {config['trial_name']}")
+    ax.set_title(f"Training/Validation Loss of Trial: {config['name']}")
     ax.set_xlabel("Epoch")
     ax.set_ylabel("Loss")
     if print_textbox: 
@@ -46,7 +46,7 @@ def plot_results(config, training_loss, validation_loss, filename_path):
     ax.legend()
     
     fig.show()
-    fig.savefig(Path(filename_path))
+    #fig.savefig(Path(filename_path))
     return
 
 ################################################################################

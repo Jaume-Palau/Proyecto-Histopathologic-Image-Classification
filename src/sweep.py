@@ -5,7 +5,6 @@ from train import train_the_model
 from src.config import sweep_config
 
 
-
 ################################################################################
 ## Train the model with sweeps W&B
 ################################################################################
@@ -17,16 +16,17 @@ def train_the_model_with_sweeps():
 
         output = train_the_model(
             config=config,
-            n_epochs=1,
+            n_epochs=config.epochs,
             verbose=False,
-            progress_print=False
+            progress_print=False,
+            use_sweeps=True
         )
 
 
 
 if __name__=="__main__":
 
-        wandb.login()
+        #wandb.login()
 
         sweep_id = wandb.sweep(sweep_config, project="histopathologic-project") 
         

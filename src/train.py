@@ -16,7 +16,7 @@ from model import CustomCNN
 ## Train the model
 ################################################################################
 
-def train_the_model(config:dict, n_epochs:int=1, verbose:bool=False, progress_print:bool=False,use_sweeps=False):
+def train_the_model(config:dict, n_epochs:int, verbose:bool=False, progress_print:bool=False,use_sweeps=False):
     """Training loop that connects everything! See comments for details.
 
     Args: 
@@ -214,20 +214,20 @@ def train_the_model(config:dict, n_epochs:int=1, verbose:bool=False, progress_pr
             "optimizer_state_dict": optimizer.state_dict(),
         }
         ## Define the location to save
-        dir_path = Path(OUTPUTS_DIR, "checkpoints", config['trial_name'])
+        dir_path = Path(OUTPUTS_DIR, "checkpoints", config['name'])
         print(f"Checkpoint saved to {dir_path}.")
         os.makedirs(dir_path, exist_ok=True)    # Make sure the directory is created
         ## Serialize and save the checkpoint data
         checkpoint_path = Path(dir_path, "last_checkpoint.pt")
         torch.save(checkpoint_data, checkpoint_path)  # Serialize the checkpoint data
     
-    dir_path = Path(OUTPUTS_DIR, "metrics",config['trial_name'])
+    dir_path = Path(OUTPUTS_DIR, "metrics",config['name'])
     os.makedirs(dir_path, exist_ok=True)    # Make sure the directory is created
     with open(Path(dir_path, "output.pkl"), "wb") as f: 
         pickle.dump(pickle.dumps(output), f)
    
 
-    plot_results(config, output['Training Loss'], output['Validation Loss'], Path(os.getcwd(), config['trial_name']))
+    plot_results(config, output['Training Loss'], output['Validation Loss'], Path(os.getcwd(), config['name']))
     
     if True:  # Final report
         print(f"Timer - ENTIRE TRAINING PORTION : {total_training_loop_time}")
@@ -237,5 +237,3 @@ def train_the_model(config:dict, n_epochs:int=1, verbose:bool=False, progress_pr
         
         
     return output
-
-
