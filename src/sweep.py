@@ -13,6 +13,7 @@ def train_the_model_with_sweeps():
 
     with wandb.init() as run:
         config = wandb.config
+        config["name"] = run.name
 
         output = train_the_model(
             config=config,
@@ -30,4 +31,4 @@ if __name__=="__main__":
 
         sweep_id = wandb.sweep(sweep_config, project="histopathologic-project") 
         
-        wandb.agent(sweep_id, train_the_model_with_sweeps, count=1)
+        wandb.agent(sweep_id, train_the_model_with_sweeps, count=50)

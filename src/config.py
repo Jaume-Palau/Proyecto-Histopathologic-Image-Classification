@@ -56,9 +56,6 @@ sweep_config = {
     },
 
     "parameters": {
-        "name" : {
-            "value" : "Prueba1"
-        },
 
         "lr": {
             "distribution": "log_uniform_values",

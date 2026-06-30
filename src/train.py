@@ -212,9 +212,11 @@ def train_the_model(config:dict, n_epochs:int, verbose:bool=False, progress_prin
         ########## CHECKPOINT PORTION ##########
         ## Create checkpoint data to be serialized
         checkpoint_data = {
-            "epoch": epoch, 
+            "epoch": epoch,
             "model_state_dict": model.state_dict(),
             "optimizer_state_dict": optimizer.state_dict(),
+            "val_auc_roc": val_auc_roc,
+            "config": dict(config),
         }
 
         #### GUARDAR MEJOR MODELO ####
