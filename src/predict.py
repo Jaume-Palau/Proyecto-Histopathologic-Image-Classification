@@ -1,15 +1,16 @@
 from itertools import chain
+import os
 
 import numpy as np
 import pandas as pd
 import torch
-import tqdm
 
+from tqdm import tqdm
 from dataset import DatasetWrapper_Test
 from model import CustomCNN
 from src.config import *
 
-def load_trained_model(checkpoint_path,device):
+def load_trained_model(checkpoint_path):
     ## Load the model state from output file
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     loaded_checkpoint = torch.load(
@@ -53,8 +54,8 @@ def predict_test_set(cnn_model):
             
             ## Model inference
             output = cnn_model(images)
-            max_value, max_idx = torch.max(output, dim=1)
-            predictions = max_idx
+            probs = torch.exp(output)
+            predictions = probs[:, 1]
             
             ## Append results to holder
             predictions = predictions.cpu().numpy()  # Need to copy to CPU first
@@ -65,7 +66,7 @@ def predict_test_set(cnn_model):
 
     ## Reshape the 2D array to an 1D array
     file_id_holder_new = list(chain(*file_id_holder))  # Convert list of lists into just list
-    results_holder_new = results_holder.reshape((-1))[:len(file_id_holder_new)].astype(int)  # Remove the extra padded elements
+    results_holder_new = results_holder.reshape((-1))[:len(file_id_holder_new)].astype(float)  # Remove the extra padded elements
 
     return file_id_holder_new, results_holder_new
 
@@ -76,12 +77,24 @@ def create_submisssion(file_id_holder_new,results_holder_new,output_path=SUBMISS
         {"id":file_id_holder_new, 
         "label":results_holder_new},
         )
-    df.to_csv(str(output_path/"submission.csv"), index=False)
+    df.to_csv(str(output_path), index=False)
 
 
 
+if __name__ == "__main__":
 
+    model_path = Path("outputs/models/final/best_model.pt")
 
+    model = load_trained_model(
+        checkpoint_path=model_path
+    )
 
+    names, predictions = predict_test_set(model)
 
+    submision_path = Path(SUBMISSIONS_DIR/"submission1.csv")
 
+    create_submisssion(
+        file_id_holder_new= names,
+        results_holder_new=predictions,
+        output_path= submision_path
+    )
