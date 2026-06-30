@@ -9,6 +9,7 @@ RAW_DIR = DATA_DIR / "raw" / "histopathologic-cancer-detection"
 PROCESSED_DIR = DATA_DIR / "processed"
 OUTPUTS_DIR = ROOT_DIR / "outputs"
 CHECKPOINTS = OUTPUTS_DIR / "checkpoints"
+MODELS_DIR = OUTPUTS_DIR / "models"
 SUBMISSIONS_DIR = OUTPUTS_DIR / "submissions"
 
 # Datos del concurso
@@ -45,6 +46,7 @@ config = {
     "name": "1a",
 }
 
+
 sweep_config = {
     "method": "bayes",
 
@@ -55,7 +57,7 @@ sweep_config = {
 
     "parameters": {
         "name" : {
-            "value" : "prueba"
+            "value" : "Prueba1"
         },
 
         "lr": {

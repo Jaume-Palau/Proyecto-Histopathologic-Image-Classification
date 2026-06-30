@@ -82,6 +82,8 @@ def train_the_model(config:dict, n_epochs:int, verbose:bool=False, progress_prin
     track_validation_FP_count = np.zeros((n_epochs, validation_batches_per_epoch), dtype=np.int64)
     track_validation_FN_count = np.zeros((n_epochs, validation_batches_per_epoch), dtype=np.int64)
     
+    
+    best_val_auc_roc = -1
     ## Main Training / Validation Loop
     for epoch in tqdm(range(n_epochs), desc="Epochs..."):  # Default to one epoch (because dataset is huge!!!)
         if progress_print: print(f"{epoch} / {n_epochs} ", "#"*50)
@@ -181,9 +183,9 @@ def train_the_model(config:dict, n_epochs:int, verbose:bool=False, progress_prin
         y_true = torch.cat(all_val_labels).numpy()
         y_probs = torch.cat(all_val_probs).numpy()
 
-        val_auc_roc = roc_auc_score(y_true,y_probs)
+        val_auc_roc = roc_auc_score(y_true,y_probs) # Calcula la metrica objetivo del concurso
         
-         ## Collect all the items into dictionary to return
+        ## Collect all the items into dictionary to return
         output = {
             "AUC-ROC" : val_auc_roc,
             "Training Loss": track_training_loss, 
@@ -214,6 +216,16 @@ def train_the_model(config:dict, n_epochs:int, verbose:bool=False, progress_prin
             "model_state_dict": model.state_dict(),
             "optimizer_state_dict": optimizer.state_dict(),
         }
+
+        #### GUARDAR MEJOR MODELO ####
+        if val_auc_roc > best_val_auc_roc:
+            best_val_auc_roc = val_auc_roc
+            model_dir = Path(MODELS_DIR, config['name'])
+            os.makedirs(model_dir, exist_ok=True)    # Make sure the directory is created
+            model_path = Path(model_dir,"best_model.pt")
+            torch.save(checkpoint_data, model_path)
+
+
         ## Define the location to save
         dir_path = Path(OUTPUTS_DIR, "checkpoints", config['name'])
         print(f"Checkpoint saved to {dir_path}.")
