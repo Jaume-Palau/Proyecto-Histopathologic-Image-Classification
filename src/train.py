@@ -84,6 +84,8 @@ def train_the_model(config:dict, n_epochs:int, verbose:bool=False, progress_prin
     
     
     best_val_auc_roc = -1
+    patience = 5
+    patience_counter = 0
     ## Main Training / Validation Loop
     for epoch in tqdm(range(n_epochs), desc="Epochs..."):  # Default to one epoch (because dataset is huge!!!)
         if progress_print: print(f"{epoch} / {n_epochs} ", "#"*50)
@@ -184,22 +186,6 @@ def train_the_model(config:dict, n_epochs:int, verbose:bool=False, progress_prin
         y_probs = torch.cat(all_val_probs).numpy()
 
         val_auc_roc = roc_auc_score(y_true,y_probs) # Calcula la metrica objetivo del concurso
-        
-        ## Collect all the items into dictionary to return
-        output = {
-            "AUC-ROC" : val_auc_roc,
-            "Training Loss": track_training_loss, 
-            "Training TP": track_training_TP_count, 
-            "Training FP": track_training_FP_count, 
-            "Training TN": track_training_TN_count,
-            "Training FN": track_training_FN_count,
-            "Validation Loss": track_validation_loss, 
-            "Validation TP": track_validation_TP_count, 
-            "Validation FP": track_validation_FP_count, 
-            "Validation TN": track_validation_TN_count,
-            "Validation FN": track_validation_FN_count,
-            #"loss": 1, # Dummy loss
-        }
 
         if use_sweeps:
             wandb.log({
@@ -222,13 +208,37 @@ def train_the_model(config:dict, n_epochs:int, verbose:bool=False, progress_prin
         #### GUARDAR MEJOR MODELO ####
         if val_auc_roc > best_val_auc_roc:
             best_val_auc_roc = val_auc_roc
+
+            patience_counter = 0
+
             model_dir = Path(MODELS_DIR, config['name'])
             os.makedirs(model_dir, exist_ok=True)    # Make sure the directory is created
             model_path = Path(model_dir,"best_model.pt")
             torch.save(checkpoint_data, model_path)
+        else:
+            patience_counter += 1
 
+        if patience_counter >= patience:
+            print("Early stopping")
+            break
 
-        ## Define the location to save
+        ## Collect all the items into dictionary to return
+        output = {
+            "AUC-ROC" : best_val_auc_roc,
+            "Training Loss": track_training_loss, 
+            "Training TP": track_training_TP_count, 
+            "Training FP": track_training_FP_count, 
+            "Training TN": track_training_TN_count,
+            "Training FN": track_training_FN_count,
+            "Validation Loss": track_validation_loss, 
+            "Validation TP": track_validation_TP_count, 
+            "Validation FP": track_validation_FP_count, 
+            "Validation TN": track_validation_TN_count,
+            "Validation FN": track_validation_FN_count,
+            #"loss": 1, # Dummy loss
+        }
+
+        ## Define the location to save(chekpoint)
         dir_path = Path(OUTPUTS_DIR, "checkpoints", config['name'])
         print(f"Checkpoint saved to {dir_path}.")
         os.makedirs(dir_path, exist_ok=True)    # Make sure the directory is created
@@ -248,7 +258,24 @@ def train_the_model(config:dict, n_epochs:int, verbose:bool=False, progress_prin
         print(f"Timer - ENTIRE TRAINING PORTION : {total_training_loop_time}")
         print(f"Timer - ENTIRE VALIDATION PORTION : {total_validation_loop_time}")
         print(f"Checkpoint path: {checkpoint_path}")
-        print(f"Pickle path: {Path(os.getcwd(), 'output_pickle', 'output.pkl')}")
+        print(f"Model path: {model_path}")
+        print(f"Pickle path: {dir_path, 'output.pkl'}")
         
         
     return output
+
+
+if __name__ == "__main__":
+
+    output = train_the_model(
+        config=best_model_config,
+        n_epochs=20,
+        verbose=False,
+        progress_print=False,
+        use_sweeps=False,
+    )
+    
+    print(f'AUC-ROC-val : {output["AUC-ROC"]}',
+          f'Validation Loss: {output["Validation Loss"].mean()}',
+          f'Trainning Loss: {output["Training Loss"].mean()}',
+          )

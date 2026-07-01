@@ -83,7 +83,7 @@ def create_submisssion(file_id_holder_new,results_holder_new,output_path=SUBMISS
 
 if __name__ == "__main__":
 
-    model_path = Path("outputs/models/final/best_model.pt")
+    model_path = Path("outputs/models/still-sweep-48/best_model.pt")
 
     model = load_trained_model(
         checkpoint_path=model_path
@@ -91,7 +91,7 @@ if __name__ == "__main__":
 
     names, predictions = predict_test_set(model)
 
-    submision_path = Path(SUBMISSIONS_DIR/"submission1.csv")
+    submision_path = Path(SUBMISSIONS_DIR/"submission2.csv")
 
     create_submisssion(
         file_id_holder_new= names,
