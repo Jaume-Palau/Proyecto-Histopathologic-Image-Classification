@@ -1,3 +1,96 @@
+## Resumen del proyecto
+
+Este proyecto implementa una solución en PyTorch para el concurso **Histopathologic Cancer Detection** de Kaggle. El objetivo es clasificar imágenes histopatológicas según la presencia o ausencia de tejido tumoral, generando como salida una probabilidad para cada imagen del conjunto de test.
+
+El trabajo partió del análisis del código base proporcionado como referencia. A partir de ahí, se adaptó el flujo de entrenamiento y predicción a los requisitos del concurso, especialmente en la generación del archivo de `submission`, donde Kaggle espera probabilidades y no clases binarias `0/1`.
+
+Durante el desarrollo se trabajó en varias fases:
+
+1. Comprensión y adaptación del código inicial.
+2. Preparación de los `DataLoader` para entrenamiento, validación y test.
+3. Ajuste de la salida del modelo, convirtiendo las log-probabilidades generadas por `LogSoftmax` en probabilidades mediante `torch.exp`.
+4. Implementación de la métrica objetivo del concurso: `ROC-AUC`.
+5. Registro de métricas y experimentos con **Weights & Biases**.
+6. Aplicación de `hyperparameter tuning` mediante **W&B Sweeps**.
+7. Guardado del mejor modelo de cada run según `val_auc_roc`.
+8. Pruebas con más épocas de entrenamiento y `early stopping`.
+9. Generación y envío de submissions a Kaggle.
+
+Aunque el resultado obtenido no alcanza las mejores puntuaciones históricas del leaderboard, el proyecto ha servido para construir un pipeline completo de entrenamiento, validación, optimización de hiperparámetros, guardado de modelos y generación de submissions.
+
+## Estructura general
+
+El proyecto está dividido en módulos para separar responsabilidades:
+
+* `src/train.py`: lógica principal de entrenamiento.
+* `src/sweep.py`: configuración y ejecución de W&B Sweeps.
+* `src/predict.py`: carga del modelo entrenado y generación de predicciones sobre test.
+* `src/dataset.py`: definición del dataset personalizado.
+* `src/model.py`: arquitectura del modelo.
+* `src/transforms.py`: transformaciones aplicadas a las imágenes.
+* `src/config.py`: rutas y configuración general del proyecto.
+* `scripts/`: scripts auxiliares para descarga de datos, análisis de modelos y otras tareas.
+
+## Archivos ignorados
+
+Por tamaño y reproducibilidad, algunos archivos no se incluyen en el repositorio:
+
+* Datos originales del concurso.
+* Modelos entrenados (`.pt`).
+* Checkpoints.
+* Métricas generadas localmente.
+* Archivos temporales o resultados pesados.
+
+Estos archivos deben gestionarse localmente y están excluidos mediante `.gitignore`.
+
+También es recomendable ignorar futuras submissions generadas automáticamente, especialmente si se crean muchas versiones durante la experimentación.
+
+## Uso básico
+
+Antes de ejecutar el proyecto, es necesario adaptar las rutas en `src/config.py` según la ubicación local del dataset y de los directorios de salida.
+
+Flujo general:
+
+```bash
+# Entrenamiento normal
+python src/train.py
+
+# Lanzar sweep de W&B
+python src/sweep.py
+
+# Generar submission
+python src/predict.py
+```
+
+Para revisar los mejores modelos guardados localmente:
+
+```bash
+./scripts/top_10_models.sh
+```
+
+## Resultado actual
+
+El mejor modelo estable utilizado para la primera submission se conserva en:
+
+```text
+outputs/models/final/best_model.pt
+```
+
+Este modelo fue seleccionado según la métrica `val_auc_roc` obtenida durante validación.
+
+## Próximas mejoras
+
+Como trabajo futuro, la mejora principal sería reforzar la generalización del modelo. Algunas líneas razonables serían:
+
+* Añadir más `data augmentation` al conjunto de entrenamiento.
+* Probar arquitecturas preentrenadas como `ResNet`, `EfficientNet` o `DenseNet`.
+* Usar validación cruzada o varios splits estratificados.
+* Comparar ensembles de varios modelos.
+* Refinar el pipeline de transformaciones según las características del dataset histopatológico.
+
+Por ahora, el proyecto queda como una primera versión funcional y documentada del flujo completo de entrenamiento y submission para Kaggle.
+
+
 # Histopathologic Image Classification Using Convolutiona Neural Network
 ---
 
