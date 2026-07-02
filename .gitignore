@@ -8,3 +8,7 @@ __pycache__/
 .env
 kaggle.json
 wandb
+outputs/checkpoints/
+outputs/metrics/
+outputs/submissions/
+output_pickle/
