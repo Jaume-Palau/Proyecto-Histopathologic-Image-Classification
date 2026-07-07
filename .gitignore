@@ -12,3 +12,4 @@ outputs/checkpoints/
 outputs/metrics/
 outputs/submissions/
 output_pickle/
+REVISION.html
