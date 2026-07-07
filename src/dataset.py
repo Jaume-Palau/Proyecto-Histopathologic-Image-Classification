@@ -164,8 +164,8 @@ def train_test_split(dataset_to_split:torch.utils.data.Dataset,
 
 if __name__ == "__main__":
     ## Gather and transform the image
-    #train_dataset = DatasetWrapper_Train()
-    # print(f"training_data_tensor size: {sys.getsizeof(train_dataset)} bytes")
+    train_dataset = DatasetWrapper_Train()
+    print(f"training_data_tensor size: {sys.getsizeof(train_dataset)} bytes")
 
 
     #test_dataset = DatasetWrapper_Test()
