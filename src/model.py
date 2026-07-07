@@ -64,7 +64,6 @@ class CustomCNN(nn.Module):
         self.flattened_dim = out_h * out_w * self.conv4.out_channels
         self.dense1 = nn.Linear(in_features = self.flattened_dim, 
                                 out_features = 100)
-        self.leak_relu4 = nn.LeakyReLU()
                                
         # Classification Layer 2
         self.dense2 = nn.Linear(in_features = 100, 
