@@ -41,7 +41,7 @@ class DatasetWrapper_Train(torch.utils.data.Dataset):
         """Returns the number of data entries."""
         return self.labels_count
     
-    
+
     def __getitem__(self, idx): 
         """Get the i-th entry of transformed data.
         
@@ -74,7 +74,6 @@ class DatasetWrapper_Train(torch.utils.data.Dataset):
 
     
 class DatasetWrapper_Test(torch.utils.data.Dataset):
-    # TODO: Redo the function so that data can be downloaded without being on Kaggle
     
     def __init__(self):
         """PyTorch utility wrapper that provides a consistent interface for our data."""
@@ -86,22 +85,26 @@ class DatasetWrapper_Test(torch.utils.data.Dataset):
                                                     center_crop_transformer,
                                                    ])
         self.transformer = composite_transformer
-        
-        # Gather training data
-        cwd = Path.cwd()
-        input_path = Path(DATA_DIR)
-        dataset_name = "histopathologic-cancer-detection"
-        data_dir = Path(TEST_DIR)
-        self.list_of_filenames = [file.name for file in data_dir.iterdir()]
-#         self.list_of_fullpaths = list(data_dir.iterdir())
-        self.list_of_fullpaths = [Path(data_dir, filename) for filename in self.list_of_filenames]
+
+
+        # Dataframe with Test submission IDs
+        self.df_submission = pd.read_csv(SAMPLE_SUBMISSION_CSV)
+
+        # List of filenames
+        self.list_of_filenames = [f"{file}.tif" for file in self.df_submission["id"]]
+
+        # List of full paths
+        self.list_of_fullpaths = [Path(TEST_DIR, filename) for filename in self.list_of_filenames]
+
+        # Length of dataset
         self.dataset_size = len(self.list_of_fullpaths)
-        
+
         
     def __len__(self):
         """Returns the number of data entries."""
         return self.dataset_size
     
+
     def __getitem__(self, idx): 
         """Get the i-th entry of transformed data.
         
@@ -116,6 +119,7 @@ class DatasetWrapper_Test(torch.utils.data.Dataset):
             image_transformed = self.transformer(image)
         file_id = self.list_of_filenames[idx][:-4]
         return (file_id, image_transformed)
+    
     
     def get_untransformed(self, idx): 
         """Get the i-th entry of untransformed data.
@@ -175,7 +179,7 @@ if __name__ == "__main__":
     # print(f"training_data_tensor size: {sys.getsizeof(train_dataset)} bytes")
 
 
-    # test_dataset = DatasetWrapper_Test()
+    test_dataset = DatasetWrapper_Test()
     # print(f"testing_data_tensor size: {sys.getsizeof(test_dataset)} bytes")
 
     # ## IGNORE - sanity check
