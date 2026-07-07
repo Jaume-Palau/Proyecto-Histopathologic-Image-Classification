@@ -4,6 +4,7 @@ from pathlib import Path
 from PIL import Image
 
 from src.config import *
+from src.transforms import *
 from torchvision.transforms import transforms, v2
 
 
@@ -12,15 +13,9 @@ class DatasetWrapper_Train(torch.utils.data.Dataset):
     def __init__(self):
         """PyTorch utility wrapper that provides a consistent interface for our data."""
                 
-        ## Construct an image transformer
-        to_tensor_transformer = transforms.ToTensor()
-        center_crop_transformer = v2.CenterCrop(size=(46, 46))
-        composite_transformer = transforms.Compose([to_tensor_transformer,  
-                                                    center_crop_transformer,
-                                                   ])
-        self.transformer = composite_transformer
+        # Construct an image transformer
+        self.transformer = Transforms_Train()
         
-
         # Dataframe with labels
         self.df_labels = pd.read_csv(TRAIN_LABELS_CSV)
 
@@ -78,14 +73,8 @@ class DatasetWrapper_Test(torch.utils.data.Dataset):
     def __init__(self):
         """PyTorch utility wrapper that provides a consistent interface for our data."""
                 
-        ## Construct an image transformer
-        to_tensor_transformer = transforms.ToTensor()
-        center_crop_transformer = v2.CenterCrop(size=(46, 46))
-        composite_transformer = transforms.Compose([to_tensor_transformer,  
-                                                    center_crop_transformer,
-                                                   ])
-        self.transformer = composite_transformer
-
+        # Construct an image transformer
+        self.transformer = Transforms_Test()
 
         # Dataframe with Test submission IDs
         self.df_submission = pd.read_csv(SAMPLE_SUBMISSION_CSV)
@@ -120,7 +109,7 @@ class DatasetWrapper_Test(torch.utils.data.Dataset):
         file_id = self.list_of_filenames[idx][:-4]
         return (file_id, image_transformed)
     
-    
+
     def get_untransformed(self, idx): 
         """Get the i-th entry of untransformed data.
         
@@ -175,11 +164,11 @@ def train_test_split(dataset_to_split:torch.utils.data.Dataset,
 
 if __name__ == "__main__":
     ## Gather and transform the image
-    # train_dataset = DatasetWrapper_Train()
+    #train_dataset = DatasetWrapper_Train()
     # print(f"training_data_tensor size: {sys.getsizeof(train_dataset)} bytes")
 
 
-    test_dataset = DatasetWrapper_Test()
+    #test_dataset = DatasetWrapper_Test()
     # print(f"testing_data_tensor size: {sys.getsizeof(test_dataset)} bytes")
 
     # ## IGNORE - sanity check
