@@ -2,14 +2,12 @@ import torch
 import pandas as pd
 from pathlib import Path
 from PIL import Image
-import sys, os
 
 from src.config import *
 from torchvision.transforms import transforms, v2
 
 
 class DatasetWrapper_Train(torch.utils.data.Dataset):
-    # TODO: Redo the function so that data can be downloaded without being on Kaggle
     
     def __init__(self):
         """PyTorch utility wrapper that provides a consistent interface for our data."""
@@ -22,26 +20,27 @@ class DatasetWrapper_Train(torch.utils.data.Dataset):
                                                    ])
         self.transformer = composite_transformer
         
-        # Gather training data
-        cwd = Path.cwd()
-        input_path = Path(DATA_DIR)
-        dataset_name = "histopathologic-cancer-detection"
-        data_dir = Path(TRAIN_DIR)
-        self.list_of_filenames = [file.name for file in data_dir.iterdir()]
-        self.list_of_fullpaths = list(data_dir.iterdir())
-        self.dataset_size = len(self.list_of_fullpaths)
-        
-        # Gather labels
-        labels_path = Path(TRAIN_LABELS_CSV)
-        labels_df = pd.read_csv(labels_path).set_index("id")
-        ## Matching the label with each file name
-        self.labels = [labels_df.loc[name[:-4], "label"] for name in self.list_of_filenames]
+
+        # Dataframe with labels
+        self.df_labels = pd.read_csv(TRAIN_LABELS_CSV)
+
+        # List of filenames
+        self.list_of_filenames = [f"{file}.tif" for file in self.df_labels["id"]]
+
+        # List of full paths
+        self.list_of_fullpaths = [Path(TRAIN_DIR, f"{img_id}.tif") for img_id in self.df_labels["id"]]
+
+        # List of labels
+        self.labels = self.df_labels["label"].tolist()
+
+        # Length of dataset
         self.labels_count = len(self.labels)
         
         
     def __len__(self):
         """Returns the number of data entries."""
-        return self.dataset_size
+        return self.labels_count
+    
     
     def __getitem__(self, idx): 
         """Get the i-th entry of transformed data.
@@ -58,6 +57,7 @@ class DatasetWrapper_Train(torch.utils.data.Dataset):
             label = self.labels[idx]
         return (image_transformed, label)
     
+
     def get_untransformed(self, idx): 
         """Get the i-th entry of untransformed data.
         
@@ -171,20 +171,20 @@ def train_test_split(dataset_to_split:torch.utils.data.Dataset,
 
 if __name__ == "__main__":
     ## Gather and transform the image
-    train_dataset = DatasetWrapper_Train()
-    print(f"training_data_tensor size: {sys.getsizeof(train_dataset)} bytes")
+    # train_dataset = DatasetWrapper_Train()
+    # print(f"training_data_tensor size: {sys.getsizeof(train_dataset)} bytes")
 
 
-    test_dataset = DatasetWrapper_Test()
-    print(f"testing_data_tensor size: {sys.getsizeof(test_dataset)} bytes")
+    # test_dataset = DatasetWrapper_Test()
+    # print(f"testing_data_tensor size: {sys.getsizeof(test_dataset)} bytes")
 
-    ## IGNORE - sanity check
-    training_set, testing_set = train_test_split(train_dataset)
+    # ## IGNORE - sanity check
+    # training_set, testing_set = train_test_split(train_dataset)
 
-    print(f"The training set has {len(training_set)} entries.")
-    print(f"The testing set has {len(testing_set)} entries.")
-    print()
+    # print(f"The training set has {len(training_set)} entries.")
+    # print(f"The testing set has {len(testing_set)} entries.")
+    # print()
 
-    for i, (image, label) in enumerate(training_set): 
-        if i > 10: break  # Checking the first few entries
-        print(f"Image: {i} | On: {image.device} | Shape: {image.shape} | Label: {label}")
+    # for i, (image, label) in enumerate(training_set): 
+    #     if i > 10: break  # Checking the first few entries
+    #     print(f"Image: {i} | On: {image.device} | Shape: {image.shape} | Label: {label}")
