@@ -1,5 +1,4 @@
 from itertools import chain
-import os
 
 import numpy as np
 import pandas as pd
@@ -38,18 +37,16 @@ def predict_test_set(cnn_model):
         num_workers = 10, 
         prefetch_factor = 5000,
         drop_last = False,
+        pin_memory = True,  # Pin memory for faster transfer to GPU
     )
 
     file_id_holder = []  # Test set is small enough thus holding output in memory
     results_holder = np.zeros(shape=(len(test_dataloader), BATCH_SIZE) )   # Test set is small enough thus holding output in memory
-    for idx in tqdm(range( len(test_dataloader) ), desc="Inferencing test set"):
+    for idx, (file_ids, images) in tqdm(enumerate(test_dataloader), desc="Inferencing test set"):
         with torch.no_grad():  # No gradient mode
-            
-            if idx == 0:  # Create an dataloader iterator
-                dataloader_iter = iter(test_dataloader)
-                
-            file_ids, images = next(dataloader_iter)  # Load the next iterator output
+
             assert len(file_ids) == len(images), "File IDs and images don't have the same number of records."
+            
             images = images.to(DEVICE)  # Transfer to GPU for faster inferencing
             
             ## Model inference
@@ -78,6 +75,9 @@ def create_submisssion(file_id_holder_new,results_holder_new,output_path=SUBMISS
         "label":results_holder_new},
         )
     df.to_csv(str(output_path), index=False)
+
+
+
 
 
 
