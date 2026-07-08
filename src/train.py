@@ -53,14 +53,16 @@ def train_the_model(config:dict, n_epochs:int, verbose:bool=False, progress_prin
         num_workers=config['dataloader_worker_count'],
         prefetch_factor=config["dataloader_prefetch_factor"],
         drop_last=True,  # The last few data that doesn't form a full batch gets dropped.
+        pin_memory=True,  # Pin memory for faster transfer to GPU
     )
     validation_dataloader = torch.utils.data.DataLoader(
         dataset=testing_set, 
-        batch_size=config["batch_size"], 
+        batch_size=config["batch_size"],
         shuffle=True,
         num_workers=config['dataloader_worker_count'],
         prefetch_factor=config["dataloader_prefetch_factor"],
         drop_last=True,  # The last few data that doesn't form a full batch gets dropped.
+        pin_memory=True,  # Pin memory for faster transfer to GPU
     )
     
     training_dataset_size = len(training_dataloader.dataset)
