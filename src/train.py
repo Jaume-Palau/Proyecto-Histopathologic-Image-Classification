@@ -93,13 +93,9 @@ def train_the_model(config:dict, n_epochs:int, verbose:bool=False, progress_prin
         if progress_print: print(f"{epoch} / {n_epochs} ", "#"*50)
         ########## TRAINING PORTION ##########
         total_training_loop_start = time.time()  # Timer
-        for batch_idx in tqdm(range(training_batches_per_epoch), desc="TRAINING PORTION"):
+        for batch_idx, (images, labels) in enumerate(tqdm(training_dataloader), desc="TRAINING PORTION"):
             if verbose: start_time = time.time()  # Timer
-            if batch_idx == 0:  # Magic of dataloader! 
-                data_loader_iter = iter(training_dataloader)
-                images, labels = next(data_loader_iter)
-            else: 
-                images, labels = next(data_loader_iter)
+
             if progress_print: print(f"{batch_idx} / {training_batches_per_epoch}", "#"*50)  # Timer
             if verbose: print(f"Timer - Load Dataloader batch (Train) : {time.time() - start_time}")  # Timer
             if verbose: start_time = time.time()  # Timer
@@ -140,14 +136,8 @@ def train_the_model(config:dict, n_epochs:int, verbose:bool=False, progress_prin
         model.eval()
         print("Validation loop")
         total_validation_loop_start = time.time()  # Timer
-        for batch_idx in tqdm(range(validation_batches_per_epoch), desc="VALIDATION PORTION"): 
+        for batch_idx, (images, labels) in enumerate(tqdm(validation_dataloader), desc="VALIDATION PORTION"):
 
-            if verbose: start_time = time.time()  # Timer
-            if batch_idx == 0:  # Magic of Dataloader
-                data_loader_iter = iter(validation_dataloader)
-                images, labels = next(data_loader_iter)
-            else: 
-                images, labels = next(data_loader_iter)
             if progress_print: print(f"{batch_idx} / {validation_batches_per_epoch}", "#"*50)  # Timer
             if verbose: print(f"Timer - Load Dataloader batch (Validation) : {time.time() - start_time}")  # Timer
             with torch.no_grad():  # No gradient mode
