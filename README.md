@@ -90,6 +90,14 @@ Como trabajo futuro, la mejora principal sería reforzar la generalización del 
 
 Por ahora, el proyecto queda como una primera versión funcional y documentada del flujo completo de entrenamiento y submission para Kaggle.
 
+### Riesgo de data leakage
+
+El dataset no proporciona identificadores de paciente, biopsia o slide original. Por este motivo, no es posible realizar una separación agrupada por paciente entre entrenamiento y validación.
+
+La validación se realiza mediante un split aleatorio sobre las imágenes disponibles, lo que puede introducir cierto riesgo de data leakage si varios parches proceden de una misma muestra médica original y acaban repartidos entre train y validation.
+
+En un entorno clínico real, lo adecuado sería validar agrupando por paciente o biopsia, garantizando que todas las imágenes asociadas a una misma fuente permanezcan únicamente en uno de los subconjuntos.
+
 
 # Histopathologic Image Classification Using Convolutiona Neural Network
 ---
