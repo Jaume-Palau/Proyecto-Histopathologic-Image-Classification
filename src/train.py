@@ -138,17 +138,19 @@ def train_the_model(config:dict, n_epochs:int, verbose:bool=False, progress_prin
         total_validation_loop_start = time.time()  # Timer
         for batch_idx, (images, labels) in enumerate(tqdm(validation_dataloader), desc="VALIDATION PORTION"):
 
-            if progress_print: print(f"{batch_idx} / {validation_batches_per_epoch}", "#"*50)  # Timer
-            if verbose: print(f"Timer - Load Dataloader batch (Validation) : {time.time() - start_time}")  # Timer
+            if progress_print: 
+                print(f"{batch_idx} / {validation_batches_per_epoch}", "#"*50)  # Timer
+
             with torch.no_grad():  # No gradient mode
                 start_time = time.time()
                 images = images.to(device)
                 labels = labels.to(device)
 
-                if verbose: print(f"Timer - Move to {device} : {time.time() - start_time}")
-                #print(f"Images Device: {images.device}, Labels Device: {labels.device}")  # Debug use
+                if verbose: 
+                    print(f"Timer - Move to {device} : {time.time() - start_time}")
+                    start_time =time.time()  # Timer
+
                 ## Model inference
-                if verbose: start_time =time.time()  # Timer
                 outputs = model(images)
                 max_value, max_idx = torch.max(outputs, dim=1)
                 prediction = max_idx
@@ -158,14 +160,17 @@ def train_the_model(config:dict, n_epochs:int, verbose:bool=False, progress_prin
                 all_val_labels.append(labels.detach().cpu())
                 all_val_probs.append(probs.detach().cpu())
 
+                if verbose: 
+                    print(f"Timer - Model inference : {time.time() - start_time}")  # Timer
 
-                if verbose: print(f"Timer - Model inference : {time.time() - start_time}")  # Timer
             ## Calculate metrics
             loss = loss_function(outputs, labels)
             ## Update variables
             num_of_batches_validated = batch_idx + 1
             ## Update trackers
-            if progress_print: print("Validation loss: ", loss.item())  # Debug use
+            if progress_print: 
+                print("Validation loss: ", loss.item())  # Debug use
+
             track_validation_loss[epoch, batch_idx] = loss.item()
             track_validation_TP_count[epoch, batch_idx] = ((prediction==1) & (labels==1)).sum().item()
             track_validation_TN_count[epoch, batch_idx] = ((prediction==0) & (labels==0)).sum().item()
