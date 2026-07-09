@@ -11,6 +11,7 @@ from dataset import DatasetWrapper_Train, train_test_split
 from helper_functions import plot_results
 from model import CustomCNN
 from model_more_spatial import CustomCNN_MoreSpatial
+from helper_functions import set_seed
 
 
 ################################################################################
@@ -39,6 +40,9 @@ def train_the_model(
             - "log_probs": model returns log-probabilities, e.g. LogSoftmax + NLLLoss.
             - "logits": model returns raw logits, e.g. CrossEntropyLoss.
     """
+
+    ### Set the random seed for reproducibility
+    set_seed(RANDOM_SEED)
 
     ## Determine whether to use CPU/GPU
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
