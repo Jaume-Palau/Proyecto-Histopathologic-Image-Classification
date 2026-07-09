@@ -198,6 +198,27 @@ def preview_transformed_images(dataset,n_row=5,n_col=10,border_width=3):
     plt.show(block=True)
 
 
+def set_seed(seed: int) -> None:
+    """
+    Fix random seeds for reproducibility.
+
+    Args:
+        seed (int): Seed value used by Python, NumPy and PyTorch.
+    """
+    import random
+    import numpy as np
+    import torch
+
+    random.seed(seed)
+    np.random.seed(seed)
+
+    torch.manual_seed(seed)
+
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+
+
 if  __name__ == "__main__":
 
     ## IGNORE - Tests
