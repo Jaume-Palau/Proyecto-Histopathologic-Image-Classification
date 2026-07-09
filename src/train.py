@@ -61,7 +61,7 @@ def train_the_model(
         weight_decay=config["weight_decay"],       # Get the weight decay from tunning config
     )
     ## Get te loss func from the model instance
-    loss_function = model.get_loss_function(reduction='sum')
+    loss_function = model.get_loss_function(reduction='mean')  # Get the loss function from the model instance
     
     ## Create dataloader - for convenience
     training_dataloader = torch.utils.data.DataLoader(
@@ -217,8 +217,8 @@ def train_the_model(
         if use_sweeps:
             wandb.log({
             "AUC-ROC" : val_auc_roc,
-            "Training Loss": track_training_loss, 
-            "Validation Loss": track_validation_loss,
+            "Training Loss": float(track_training_loss[epoch].mean()), 
+            "Validation Loss": float(track_validation_loss[epoch].mean()),
             })
 
 
