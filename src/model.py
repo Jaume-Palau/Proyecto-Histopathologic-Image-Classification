@@ -4,9 +4,6 @@ import torchinfo
 
 from helper_functions import calc_dim
 
-################################################################################
-## Create a CNN model object
-################################################################################
 
 class CustomCNN(nn.Module):
     def __init__(self, input_channels:int=3, input_height:int=46, input_width:int=46):

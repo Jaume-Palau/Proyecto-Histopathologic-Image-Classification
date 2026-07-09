@@ -7,6 +7,7 @@ import torch
 from tqdm import tqdm
 from dataset import DatasetWrapper_Test
 from model import CustomCNN
+from model_more_spatial import CustomCNN_MoreSpatial
 from src.config import *
 
 def load_trained_model(checkpoint_path):
@@ -25,9 +26,19 @@ def load_trained_model(checkpoint_path):
     return cnn_model
 
 
-def predict_test_set(cnn_model):
+def predict_test_set(model: CustomCNN | CustomCNN_MoreSpatial, output_type: str ):
 
-    cnn_model.eval()
+    """
+    Generate predictions for the test set.
+
+    Args:
+        model: PyTorch model used for inference.
+        output_type (str): Type of model output.
+            - "log_probs": model returns log-probabilities, e.g. LogSoftmax + NLLLoss.
+            - "logits": model returns raw logits, e.g. CrossEntropyLoss.
+    """
+
+    model.eval()
 
     ## Inference with model 1a and save results
     test_dataloader = torch.utils.data.DataLoader(  # Create a dataloader to make things easier
@@ -50,9 +61,14 @@ def predict_test_set(cnn_model):
             images = images.to(DEVICE)  # Transfer to GPU for faster inferencing
             
             ## Model inference
-            output = cnn_model(images)
-            probs = torch.exp(output)
-            predictions = probs[:, 1]
+            output = model(images)
+
+            if output_type == "log_probs":
+                probs = torch.exp(output)
+                predictions = probs[:, 1]
+                
+            elif output_type == "logits":
+                predictions = torch.softmax(output, dim=1)[:, 1]
             
             ## Append results to holder
             predictions = predictions.cpu().numpy()  # Need to copy to CPU first

@@ -10,19 +10,34 @@ from tqdm.autonotebook import tqdm
 from dataset import DatasetWrapper_Train, train_test_split
 from helper_functions import plot_results
 from model import CustomCNN
+from model_more_spatial import CustomCNN_MoreSpatial
 
 
 ################################################################################
 ## Train the model
 ################################################################################
 
-def train_the_model(config:dict, n_epochs:int, verbose:bool=False, progress_print:bool=False,use_sweeps=False):
+def train_the_model(
+        model: CustomCNN|CustomCNN_MoreSpatial,
+        config:dict,
+        n_epochs:int,
+        output_type:str,
+        verbose:bool=False,
+        progress_print:bool=False,
+        use_sweeps=False,
+    ):
+
+
     """Training loop that connects everything! See comments for details.
 
     Args: 
+        model (CustomCNN | CustomCNN_MoreSpatial): The model to train.
         config (dict): Dictionary holding various parameters for the model
         n_epochs (int): Number of epochs to train and validate.
         verbose (bool): Whether to print out the profiling outputs.
+        output_type (str): Type of model output.
+            - "log_probs": model returns log-probabilities, e.g. LogSoftmax + NLLLoss.
+            - "logits": model returns raw logits, e.g. CrossEntropyLoss.
     """
 
     ## Determine whether to use CPU/GPU
@@ -33,8 +48,7 @@ def train_the_model(config:dict, n_epochs:int, verbose:bool=False, progress_prin
     dataset_to_split = DatasetWrapper_Train()
     training_set, testing_set = train_test_split(dataset_to_split, train_proportion=0.8)
     
-    ## Instantiate a CNN model instance
-    model = CustomCNN()       # Model instance
+
     model = model.to(device)  # Move model to the device
     ## Get the optimizer from model instance
     optimizer = model.get_optimizer(                   # Get the optimizer (ADAM)
@@ -93,7 +107,7 @@ def train_the_model(config:dict, n_epochs:int, verbose:bool=False, progress_prin
         if progress_print: print(f"{epoch} / {n_epochs} ", "#"*50)
         ########## TRAINING PORTION ##########
         total_training_loop_start = time.time()  # Timer
-        for batch_idx, (images, labels) in enumerate(tqdm(training_dataloader), desc="TRAINING PORTION"):
+        for batch_idx, (images, labels) in enumerate(tqdm(training_dataloader, desc="TRAINING PORTION")):
             if verbose: start_time = time.time()  # Timer
 
             if progress_print: print(f"{batch_idx} / {training_batches_per_epoch}", "#"*50)  # Timer
@@ -106,12 +120,16 @@ def train_the_model(config:dict, n_epochs:int, verbose:bool=False, progress_prin
 
             ## Set model to training mode
             if verbose: start_time = time.time()  # Timer
+
+
             model.train()
             outputs = model(images)  # Inference: The model outputs are in log(proba) scale
             max_value, max_idx = torch.max(outputs, dim=1)
             prediction = max_idx  # Classification 
             ## Calculate metrics
             loss = loss_function(outputs, labels)  # Calculate the loss
+
+
             ## Backprop
             optimizer.zero_grad()  # Zero out the loss gradient - https://pytorch.org/docs/stable/generated/torch.optim.Adam.html#torch.optim.Adam.zero_grad
             loss.backward()        # Back propagate the loss
@@ -152,11 +170,19 @@ def train_the_model(config:dict, n_epochs:int, verbose:bool=False, progress_prin
 
                 ## Model inference
                 outputs = model(images)
+
                 max_value, max_idx = torch.max(outputs, dim=1)
                 prediction = max_idx
 
-                probs = torch.exp(outputs)
-                probs = probs[:,1]
+                if output_type == "log_probs":
+                    probs = torch.exp(outputs)
+                    probs = probs[:,1]
+
+                elif output_type == "logits":
+                    probs = torch.softmax(outputs, dim=1)
+                    probs = probs[:,1]
+
+
                 all_val_labels.append(labels.detach().cpu())
                 all_val_probs.append(probs.detach().cpu())
 
@@ -264,13 +290,27 @@ def train_the_model(config:dict, n_epochs:int, verbose:bool=False, progress_prin
 
 if __name__ == "__main__":
 
+    # output = train_the_model(
+    #     config=best_model_config,
+    #     n_epochs=20,
+    #     verbose=False,
+    #     progress_print=False,
+    #     use_sweeps=False,
+    #     model = CustomCNN_MoreSpatial(),
+    #     output_type = "logits",
+    # )
+
     output = train_the_model(
         config=best_model_config,
         n_epochs=20,
         verbose=False,
         progress_print=False,
         use_sweeps=False,
+        model = CustomCNN(),
+        output_type = "log_probs",
     )
+
+
     
     print(f'AUC-ROC-val : {output["AUC-ROC"]}',
           f'Validation Loss: {output["Validation Loss"].mean()}',

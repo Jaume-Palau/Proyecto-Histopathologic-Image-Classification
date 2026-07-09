@@ -22,7 +22,7 @@ class CustomCNN_MoreSpatial(nn.Module):
         self.input_width = input_width
         
         ## Create/Define the loss function
-        self._loss_function = nn.NLLLoss
+        self._loss_function = nn.CrossEntropyLoss
         
         ## Create all the layers for the network
         # Layer 1
@@ -73,7 +73,7 @@ class CustomCNN_MoreSpatial(nn.Module):
         # Classification Layer 2
         self.dense2 = nn.Linear(in_features = 32, 
                                 out_features = 2)  # Binary classification
-        self.logsoftmax = nn.LogSoftmax(dim=1)
+        #self.logsoftmax = nn.LogSoftmax(dim=1)
         
     def forward(self, x):
         """Override nn.Module forward method."""
@@ -98,7 +98,7 @@ class CustomCNN_MoreSpatial(nn.Module):
         x = self.leak_relu4(x)
         
         x = self.dense2(x)
-        x = self.logsoftmax(x)
+        #x = self.logsoftmax(x)
         
         return x
     
