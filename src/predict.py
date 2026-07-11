@@ -10,7 +10,7 @@ from model import CustomCNN
 from model_more_spatial import CustomCNN_MoreSpatial
 from src.config import *
 
-def load_trained_model(checkpoint_path):
+def load_trained_model(checkpoint_path, model : CustomCNN | CustomCNN_MoreSpatial):
     ## Load the model state from output file
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     loaded_checkpoint = torch.load(
@@ -18,12 +18,11 @@ def load_trained_model(checkpoint_path):
     map_location=torch.device(device)
     )
     ## Create model and load the model state
-    cnn_model = CustomCNN()
-    cnn_model.load_state_dict(loaded_checkpoint["model_state_dict"])
-    cnn_model.to(device)
-    cnn_model.eval()
+    model.load_state_dict(loaded_checkpoint["model_state_dict"])
+    model.to(device)
+    model.eval()
 
-    return cnn_model
+    return model
 
 
 def predict_test_set(model: CustomCNN | CustomCNN_MoreSpatial, output_type: str ):
@@ -99,7 +98,7 @@ def create_submisssion(file_id_holder_new,results_holder_new,output_path=SUBMISS
 
 if __name__ == "__main__":
 
-    model_path = Path("outputs/models/still-sweep-48/best_model.pt")
+    model_path = Path("outputs/models/custom-cnn-morespatial/best_model.pt")
 
     model = load_trained_model(
         checkpoint_path=model_path
@@ -107,7 +106,7 @@ if __name__ == "__main__":
 
     names, predictions = predict_test_set(model)
 
-    submision_path = Path(SUBMISSIONS_DIR/"submission2.csv")
+    submision_path = Path(SUBMISSIONS_DIR/"submission3.csv")
 
     create_submisssion(
         file_id_holder_new= names,
