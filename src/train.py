@@ -158,7 +158,7 @@ def train_the_model(
         model.eval()
         print("Validation loop")
         total_validation_loop_start = time.time()  # Timer
-        for batch_idx, (images, labels) in enumerate(tqdm(validation_dataloader), desc="VALIDATION PORTION"):
+        for batch_idx, (images, labels) in enumerate(tqdm(validation_dataloader, desc="VALIDATION PORTION")):
 
             if progress_print: 
                 print(f"{batch_idx} / {validation_batches_per_epoch}", "#"*50)  # Timer
@@ -294,25 +294,25 @@ def train_the_model(
 
 if __name__ == "__main__":
 
-    # output = train_the_model(
-    #     config=best_model_config,
-    #     n_epochs=20,
-    #     verbose=False,
-    #     progress_print=False,
-    #     use_sweeps=False,
-    #     model = CustomCNN_MoreSpatial(),
-    #     output_type = "logits",
-    # )
-
     output = train_the_model(
         config=best_model_config,
         n_epochs=20,
         verbose=False,
         progress_print=False,
         use_sweeps=False,
-        model = CustomCNN(),
-        output_type = "log_probs",
+        model = CustomCNN_MoreSpatial(),
+        output_type = "logits",
     )
+
+    # output = train_the_model(
+    #     config=best_model_config,
+    #     n_epochs=20,
+    #     verbose=False,
+    #     progress_print=False,
+    #     use_sweeps=False,
+    #     model = CustomCNN(),
+    #     output_type = "log_probs",
+    # )
 
 
     
