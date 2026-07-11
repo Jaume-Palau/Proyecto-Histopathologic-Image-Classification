@@ -7,16 +7,20 @@ El trabajo partió del análisis del código base proporcionado como referencia.
 Durante el desarrollo se trabajó en varias fases:
 
 1. Comprensión y adaptación del código inicial.
-2. Preparación de los `DataLoader` para entrenamiento, validación y test.
-3. Ajuste de la salida del modelo, convirtiendo las log-probabilidades generadas por `LogSoftmax` en probabilidades mediante `torch.exp`.
-4. Implementación de la métrica objetivo del concurso: `ROC-AUC`.
-5. Registro de métricas y experimentos con **Weights & Biases**.
-6. Aplicación de `hyperparameter tuning` mediante **W&B Sweeps**.
-7. Guardado del mejor modelo de cada run según `val_auc_roc`.
-8. Pruebas con más épocas de entrenamiento y `early stopping`.
-9. Generación y envío de submissions a Kaggle.
+2. Preparación de `Dataset` y `DataLoader` para entrenamiento, validación y test.
+3. Uso de `train_labels.csv` y `sample_submission.csv` para construir los datasets, evitando depender del orden de los archivos en disco.
+4. Ajuste de la salida del modelo para generar probabilidades válidas para Kaggle.
+5. Implementación de la métrica objetivo del concurso: `ROC-AUC`.
+6. Registro de métricas y experimentos con **Weights & Biases**.
+7. Aplicación de `hyperparameter tuning` mediante **W&B Sweeps**.
+8. Guardado del mejor modelo de cada run según `val_auc_roc`.
+9. Aplicación de normalización y `data augmentation` en entrenamiento.
+10. Prueba de una arquitectura CNN alternativa con menor reducción espacial.
+11. Generación y envío de submissions a Kaggle.
 
 Aunque el resultado obtenido no alcanza las mejores puntuaciones históricas del leaderboard, el proyecto ha servido para construir un pipeline completo de entrenamiento, validación, optimización de hiperparámetros, guardado de modelos y generación de submissions.
+
+Además, durante la revisión se corrigieron varias partes importantes del flujo original: construcción de datasets basada en CSV, separación de transformaciones, normalización, control de semillas aleatorias, logging más limpio de métricas en W&B y sustitución del patrón `LogSoftmax + NLLLoss` por una salida basada en logits junto con `CrossEntropyLoss`.
 
 ## Estructura general
 
@@ -25,10 +29,12 @@ El proyecto está dividido en módulos para separar responsabilidades:
 * `src/train.py`: lógica principal de entrenamiento.
 * `src/sweep.py`: configuración y ejecución de W&B Sweeps.
 * `src/predict.py`: carga del modelo entrenado y generación de predicciones sobre test.
-* `src/dataset.py`: definición del dataset personalizado.
-* `src/model.py`: arquitectura del modelo.
+* `src/dataset.py`: definición de los datasets personalizados.
+* `src/model.py`: arquitectura CNN inicial.
+* `src/model_more_spatial.py`: arquitectura CNN alternativa con menor reducción espacial.
 * `src/transforms.py`: transformaciones aplicadas a las imágenes.
 * `src/config.py`: rutas y configuración general del proyecto.
+* `src/helper_functions.py`: funciones auxiliares reutilizables.
 * `scripts/`: scripts auxiliares para descarga de datos, análisis de modelos y otras tareas.
 
 ## Archivos ignorados
@@ -40,10 +46,9 @@ Por tamaño y reproducibilidad, algunos archivos no se incluyen en el repositori
 * Checkpoints.
 * Métricas generadas localmente.
 * Archivos temporales o resultados pesados.
+* Submissions generadas durante la experimentación.
 
 Estos archivos deben gestionarse localmente y están excluidos mediante `.gitignore`.
-
-También es recomendable ignorar futuras submissions generadas automáticamente, especialmente si se crean muchas versiones durante la experimentación.
 
 ## Uso básico
 
@@ -65,38 +70,61 @@ python src/predict.py
 Para revisar los mejores modelos guardados localmente:
 
 ```bash
-./scripts/top_10_models.sh
+bash scripts/top_10_models.sh
 ```
 
-## Resultado actual
+## Resultados
 
-El mejor modelo estable utilizado para la primera submission se conserva en:
+Se generaron varias submissions en Kaggle a partir de diferentes versiones del modelo:
+
+| Submission | Modelo | Public Score | Private Score |
+|---|---|---:|---:|
+| `submission1.csv` | CNN base | 0.8898 | 0.8704 |
+| `submission2.csv` | CNN base con sweep | 0.8886 | 0.8031 |
+| `submission3.csv` | CNN MoreSpatial + normalización + data augmentation | 0.9091 | 0.8412 |
+
+El modelo `CustomCNN_MoreSpatial` obtuvo el mejor resultado en `public score`, pero no mejoró el `private score` respecto a la primera submission.
+
+Esto indica que las mejoras aplicadas al modelo y al pipeline sí mejoraron el rendimiento sobre la parte pública del test, pero no necesariamente la generalización sobre el conjunto privado de Kaggle.
+
+El mejor checkpoint local del modelo `CustomCNN_MoreSpatial` se conserva en:
 
 ```text
-outputs/models/final/best_model.pt
+outputs/models/custom-cnn-morespatial/best_model.pt
 ```
 
-Este modelo fue seleccionado según la métrica `val_auc_roc` obtenida durante validación.
-
-## Próximas mejoras
-
-Como trabajo futuro, la mejora principal sería reforzar la generalización del modelo. Algunas líneas razonables serían:
-
-* Añadir más `data augmentation` al conjunto de entrenamiento.
-* Probar arquitecturas preentrenadas como `ResNet`, `EfficientNet` o `DenseNet`.
-* Usar validación cruzada o varios splits estratificados.
-* Comparar ensembles de varios modelos.
-* Refinar el pipeline de transformaciones según las características del dataset histopatológico.
-
-Por ahora, el proyecto queda como una primera versión funcional y documentada del flujo completo de entrenamiento y submission para Kaggle.
+## Limitaciones
 
 ### Riesgo de data leakage
 
 El dataset no proporciona identificadores de paciente, biopsia o slide original. Por este motivo, no es posible realizar una separación agrupada por paciente entre entrenamiento y validación.
 
-La validación se realiza mediante un split aleatorio sobre las imágenes disponibles, lo que puede introducir cierto riesgo de data leakage si varios parches proceden de una misma muestra médica original y acaban repartidos entre train y validation.
+La validación se realiza mediante un split aleatorio sobre las imágenes disponibles, lo que puede introducir cierto riesgo de `data leakage` si varios parches proceden de una misma muestra médica original y acaban repartidos entre train y validation.
 
-En un entorno clínico real, lo adecuado sería validar agrupando por paciente o biopsia, garantizando que todas las imágenes asociadas a una misma fuente permanezcan únicamente en uno de los subconjuntos.
+En un entorno clínico real, lo adecuado sería validar agrupando por paciente, biopsia o slide, garantizando que todas las imágenes asociadas a una misma fuente permanezcan únicamente en uno de los subconjuntos.
+
+### Diferencia entre validación local y Kaggle
+
+El mejor modelo local fue seleccionado según `val_auc_roc`, pero esta métrica no siempre se correspondió directamente con el `private score` de Kaggle.
+
+Esto puede deberse a varios factores:
+
+* El split local puede no representar bien la distribución del test privado.
+* Puede existir variabilidad entre la parte pública y privada del leaderboard.
+* Las mejoras de arquitectura o `data augmentation` pueden aumentar la robustez en algunos subconjuntos, pero no necesariamente en todos.
+* El dataset no permite controlar agrupaciones por paciente o biopsia.
+
+## Próximas mejoras
+
+Como trabajo futuro, la mejora principal sería reforzar la generalización del modelo. Algunas líneas razonables serían:
+
+* Probar arquitecturas preentrenadas como `ResNet`, `EfficientNet` o `DenseNet`.
+* Usar validación cruzada o varios splits estratificados.
+* Comparar ensembles de varios modelos.
+* Revisar estrategias de `data augmentation` específicas para imágenes histopatológicas.
+* Ajustar el tamaño del `crop` y estudiar si se pierde información relevante.
+* Mejorar el control experimental comparando los modelos con el mismo split y la misma configuración base.
+
 
 
 # Histopathologic Image Classification Using Convolutiona Neural Network
