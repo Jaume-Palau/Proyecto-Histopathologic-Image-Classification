@@ -123,7 +123,7 @@ best_model_config = {
 ### Config for new model CustomCNN_MoreSpatial
 ################################################################################
 
-best_model_config = {
+config_CustomCNN_MoreSpatial = {
     "batch_size": 50,
     "beta1": 0.9359670925526088,
     "beta2": 0.9735930492405408,
