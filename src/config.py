@@ -117,3 +117,20 @@ best_model_config = {
     "weight_decay": 0,
     "name": "still-sweep-48"
     }
+
+
+################################################################################
+### Config for new model CustomCNN_MoreSpatial
+################################################################################
+
+best_model_config = {
+    "batch_size": 50,
+    "beta1": 0.9359670925526088,
+    "beta2": 0.9735930492405408,
+    "dataloader_prefetch_factor": 2,
+    "dataloader_worker_count": 10,
+    "epochs": 20,
+    "lr": 0.0011371676678168876,
+    "weight_decay": 0,
+    "name": "custom-cnn-morespatial"
+    }

@@ -296,7 +296,7 @@ if __name__ == "__main__":
 
     output = train_the_model(
         config=best_model_config,
-        n_epochs=20,
+        n_epochs=best_model_config['epochs'],
         verbose=False,
         progress_print=False,
         use_sweeps=False,
