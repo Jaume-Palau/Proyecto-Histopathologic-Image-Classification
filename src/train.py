@@ -295,8 +295,8 @@ def train_the_model(
 if __name__ == "__main__":
 
     output = train_the_model(
-        config=best_model_config,
-        n_epochs=best_model_config['epochs'],
+        config=config_CustomCNN_MoreSpatial,
+        n_epochs=config_CustomCNN_MoreSpatial['epochs'],
         verbose=False,
         progress_print=False,
         use_sweeps=False,
