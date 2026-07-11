@@ -276,7 +276,7 @@ def train_the_model(
     dir_path = Path(OUTPUTS_DIR, "metrics",config['name'])
     os.makedirs(dir_path, exist_ok=True)    # Make sure the directory is created
     with open(Path(dir_path, "output.pkl"), "wb") as f: 
-        pickle.dump(pickle.dumps(output), f)
+        pickle.dump(output, f)
    
 
     plot_results(config, output['Training Loss'], output['Validation Loss'], Path(os.getcwd(), config['name']))
