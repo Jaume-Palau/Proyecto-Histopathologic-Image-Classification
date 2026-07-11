@@ -17,7 +17,7 @@ def load_trained_model(checkpoint_path, model : CustomCNN | CustomCNN_MoreSpatia
         checkpoint_path,  
     map_location=torch.device(device)
     )
-    ## Create model and load the model state
+    ## Load the model state
     model.load_state_dict(loaded_checkpoint["model_state_dict"])
     model.to(device)
     model.eval()
@@ -62,6 +62,7 @@ def predict_test_set(model: CustomCNN | CustomCNN_MoreSpatial, output_type: str 
             ## Model inference
             output = model(images)
 
+            ### Model
             if output_type == "log_probs":
                 probs = torch.exp(output)
                 predictions = probs[:, 1]
@@ -101,10 +102,11 @@ if __name__ == "__main__":
     model_path = Path("outputs/models/custom-cnn-morespatial/best_model.pt")
 
     model = load_trained_model(
-        checkpoint_path=model_path
+        checkpoint_path=model_path,
+        model=CustomCNN_MoreSpatial()
     )
 
-    names, predictions = predict_test_set(model)
+    names, predictions = predict_test_set(model, output_type="logits")
 
     submision_path = Path(SUBMISSIONS_DIR/"submission3.csv")
 
